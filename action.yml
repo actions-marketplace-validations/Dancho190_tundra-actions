@@ -1,0 +1,51 @@
+name: "Tundra Action"
+description: "AI-powered code analysis — endpoints, ESLint, tests on every PR"
+author: "dan321"
+
+branding:
+  icon: "triangle"
+  color: "gray"
+
+inputs:
+  github-token:
+    description: "secrets.GITHUB_TOKEN"
+    required: true
+
+  mode:
+    description: "diff — только изменённые файлы | full — весь репозиторий"
+    required: false
+    default: "diff"
+
+  eslint:
+    description: "Запускать ESLint (true/false)"
+    required: false
+    default: "true"
+
+  eslint-config:
+    description: "Путь к ESLint конфигу"
+    required: false
+    default: ".eslintrc.json"
+
+  frameworks:
+    description: "express,nestjs,fastapi,flask,spring — через запятую. Пусто = автодетект"
+    required: false
+    default: ""
+
+  fail-on-error:
+    description: "Падать если найдены errors (true/false)"
+    required: false
+    default: "true"
+
+outputs:
+  endpoints-count:
+    description: "Количество найденных API эндпоинтов"
+  issues-count:
+    description: "Количество issues (errors + warnings)"
+  passed:
+    description: "true если все проверки прошли"
+  score:
+    description: "Health score от 0 до 100"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
