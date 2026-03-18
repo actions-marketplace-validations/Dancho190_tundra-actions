@@ -99,15 +99,22 @@ async function runTestCommand(
   runner: "jest" | "vitest",
   workspace: string,
 ): Promise<{ stdout: string; failed: boolean }> {
-  const commands = {
-    jest: ["jest", ["--coverage", "--json", "--passWithNoTests"]],
-    vitest: ["vitest", ["run", "--coverage", "--reporter=json"]],
-  } as const;
+  const commands: Record<string, [string, string[]]> = {
+    jest:   ["npx", ["jest",   "--coverage", "--json", "--passWithNoTests"]],
+    vitest: ["npx", ["vitest", "run", "--coverage", "--reporter=json"]],
+  };
 
-  const [cmd, args] = commands[runner];
+  const [bin, args] = commands[runner];
+ 
+  // Валидируем workspace — path traversal защита
+  const safeWorkspace = path.resolve(workspace);
+  if (!path.isAbsolute(safeWorkspace)) {
+    core.warning(`test-runner: unsafe workspace — ${workspace}`);
+    return { stdout: "", failed: true };
+  }
 
   try {
-    const result = await execa("npx", [cmd, ...args], {
+    const result = await execa(bin, [...args], {
       cwd: workspace,
       timeout: 120_000, // 2 минуты максимум
       env: { ...process.env, CI: "true", FORCE_COLOR: "0" },
@@ -219,7 +226,7 @@ function parseVitestOutput(json: any): ParsedResults {
   };
 }
 
-// ── Читаем coverage-summary.json ──────────────────────────
+// Читаем coverage-summary.json 
 function readCoverage(workspace: string) {
   const summaryPath = path.join(workspace, "coverage", "coverage-summary.json");
 
